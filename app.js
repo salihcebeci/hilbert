@@ -1,70 +1,91 @@
+// Hilbert Curve
+// Coding in the Cabana
+// The Coding Train / Daniel Shiffman
+// https://thecodingtrain.com/CodingInTheCabana/003-hilbert-curve.html
+// https://youtu.be/dSK-MW-zuAc
 
+const order = 6;
+let N;
+let total;
 
-var turtleX;
-var turtleY;
-var turtleHeading = 0;
-var length;
-var W = 800;
-var H = 800;
-var n = 2;
+let path = [];
+
+let counter = 0;
 
 function setup() {
-  createCanvas(W, H);
-  turtleX = 0;
-  turtleY = 0;
+  createCanvas(512, 512);
+  colorMode(HSB, 360, 255, 255);
   background(0);
-  strokeWeight(30);
-  stroke(255,0,0);
-  noLoop();
-}
 
-function draw() {
+  N = int(pow(2, order));
+  total = N * N;
 
-  length = W / n;
-
-  for (var i = 1 ; i < n+1 ; i++){
-    turnRight();
-    oneCurveLeft();
+  for (let i = 0; i < total; i++) {
+    path[i] = hilbert(i);
+    let len = width / N;
+    path[i].mult(len);
+    path[i].add(len / 2, len / 2);
   }
 }
 
-function oneCurveRight(){
-  walk();
-  turnRight();
-  walk();
-  turnRight();
-  walk();
+function draw() {
+  background(0);
+
+  stroke(255);
+  strokeWeight(2);
+  noFill();
+  //beginShape();
+  for (let i = 1; i < counter; i++) {
+    let h = map(i, 0, path.length, 0, 360);
+    h = 20;
+    stroke(h, 255, 255);
+    line(path[i].x, path[i].y, path[i - 1].x, path[i - 1].y);
+  }
+  //endShape();
+
+  counter += 1;
+  if (counter >= path.length) {
+    // counter = 0;
+  }
+
+  // strokeWeight(4);
+  // for (let i = 0; i < path.length; i++) {
+  //  point(path[i].x, path[i].y);
+  //  text(i, path[i].x+5, path[i].y);
+  // }
 }
 
-function oneCurveLeft(){
-  walk();
-  turnLeft();
-  walk();
-  turnLeft();
-  walk();
-}
 
-function walk(){
-  forward(length);
-}
+function hilbert(i) {
+  const points = [
+    new p5.Vector(0, 0),
+    new p5.Vector(0, 1),
+    new p5.Vector(1, 1),
+    new p5.Vector(1, 0)
+  ];
 
-function turnLeft(){
-  rotateTurtle(270);
-}
+  let index = i & 3;
+  let v = points[index];
 
-function turnRight(){
-  rotateTurtle(90);
-}
-
-function forward(amount) {
-  var newX = turtleX + cos(radians(turtleHeading)) * amount;
-  var newY = turtleY + sin(radians(turtleHeading)) * amount;
-  line(turtleX, turtleY, newX, newY);
-  fill(0);
-  turtleX = newX;
-  turtleY = newY;
-}
-
-function rotateTurtle(degrees) {
-  turtleHeading += degrees;
+  for (let j = 1; j < order; j++) {
+    i = i >>> 2;
+    index = i & 3;
+    let len = pow(2, j);
+    if (index == 0) {
+      let temp = v.x;
+      v.x = v.y;
+      v.y = temp;
+    } else if (index == 1) {
+      v.y += len;
+    } else if (index == 2) {
+      v.x += len;
+      v.y += len;
+    } else if (index == 3) {
+      let temp = len - 1 - v.x;
+      v.x = len - 1 - v.y;
+      v.y = temp;
+      v.x += len;
+    }
+  }
+  return v;
 }
